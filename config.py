@@ -4,7 +4,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN")
 
 # Bir yoki bir nechta admin ID (vergul bilan ajrating)
 # Misol: "123456789" yoki "123456789,987654321"
-_admin_ids = os.getenv("ADMIN_ID", "123456789")
+_admin_ids = os.getenv("ADMIN_ID", "189523089")
 ADMIN_IDS = [int(x.strip()) for x in _admin_ids.split(",") if x.strip()]
 ADMIN_ID = ADMIN_IDS[0]  # Asosiy admin (birinchisi)
 
