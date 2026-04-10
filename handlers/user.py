@@ -23,10 +23,11 @@ class OrderState(StatesGroup):
 async def start(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        f"👋 Salom, <b>{message.from_user.first_name}</b>!\n\n"
+        f"👋 Assalomu alaykum, <b>{message.from_user.first_name}</b>!\n\n"
         "📚 <b>O'quv Reja Bot</b>ga xush kelibsiz!\n\n"
         "Bu bot orqali siz malaka talabingizga asosan "
         "professional o'quv reja buyurtma qilishingiz mumkin.\n\n"
+        "📚 <b>1 dona</b> o'quv reja 900 000 ming so'm evaziga tayyorlab beriladi!\n\n"
         "👇 Quyidagi menyudan foydalaning:",
         parse_mode="HTML",
         reply_markup=main_menu()
