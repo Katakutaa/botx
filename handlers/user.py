@@ -117,7 +117,7 @@ async def fayl_qabul(message: Message, state: FSMContext, bot: Bot):
             document=doc.file_id,
             caption=(
                 f"🆕 <b>Maxsus buyurtma #{order_id}</b>\n\n"
-                f"👤 Foydalanuvchi: @{message.from_user.username or 'Noma\'lum'}\n"
+                f"👤 Foydalanuvchi: @{message.from_user.username or 'Nomaʼlum'}\n"
                 f"🆔 ID: <code>{message.from_user.id}</code>\n"
                 f"📄 Fayl: {doc.file_name}\n"
                 f"📊 Bet soni: {bet_soni} bet\n"
