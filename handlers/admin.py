@@ -5,10 +5,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from config import ADMIN_ID
+from config import ADMIN_ID, NARX, MUDDAT
 from utils.keyboards import admin_fayl_kb
 from utils.database import get_order, update_order_status, set_result_file, get_all_orders
-from utils.pdf_utils import format_narx
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -60,8 +59,7 @@ async def all_orders(message: Message):
     text = "📋 <b>Barcha buyurtmalar:</b>\n\n"
     for order_id, order in list(orders.items())[-20:]:
         emoji = status_emoji.get(order["status"], "⚪")
-        narx = format_narx(order["narx"])
-        text += f"{emoji} #{order_id} | @{order['username']} | {order['bet_soni']}b | {narx} | {order['status']}\n"
+        text += f"{emoji} #{order_id} | @{order['username']} | {order['kategoriya']} | {order['status']}\n"
 
     await message.answer(text, parse_mode="HTML")
 
@@ -83,13 +81,13 @@ async def one_order(message: Message):
         await message.answer(f"❌ #{order_id} buyurtma topilmadi.")
         return
 
-    narx = format_narx(order["narx"])
     await message.answer(
         f"📌 <b>Buyurtma #{order_id}</b>\n\n"
         f"👤 @{order['username']} | ID: <code>{order['user_id']}</code>\n"
+        f"📚 Yo'nalish: {order['kategoriya']}\n"
         f"📄 Bet soni: {order['bet_soni']}\n"
-        f"💰 Narx: {narx}\n"
-        f"⏱ Muddat: {order['muddat']}\n"
+        f"💰 Narx: {NARX:,} so'm\n"
+        f"⏱ Muddat: {MUDDAT}\n"
         f"📊 Status: {order['status']}\n"
         f"📅 Sana: {order['created_at']}",
         parse_mode="HTML",
@@ -112,12 +110,11 @@ async def admin_tasdiqlash(callback: CallbackQuery, bot: Bot):
 
     update_order_status(order_id, "tasdiqlandi")
 
-    # Buyurtmachiga xabar
     await bot.send_message(
         order["user_id"],
         f"✅ <b>To'lovingiz tasdiqlandi!</b>\n\n"
         f"📌 Buyurtma: #<b>{order_id}</b>\n"
-        f"⏱ O'quv reja {order['muddat']} ichida tayyor bo'ladi.\n\n"
+        f"⏱ O'quv reja {MUDDAT} ichida tayyor bo'ladi.\n\n"
         f"Tayyor bo'lganda sizga yuboriladi 📨",
         parse_mode="HTML"
     )
@@ -145,7 +142,6 @@ async def admin_rad(callback: CallbackQuery, bot: Bot):
 
     update_order_status(order_id, "rad_etildi")
 
-    # Buyurtmachiga xabar
     await bot.send_message(
         order["user_id"],
         f"❌ <b>To'lovingiz tasdiqlanmadi.</b>\n\n"
@@ -191,38 +187,19 @@ async def oquv_reja_yuborish(message: Message, state: FSMContext, bot: Bot):
         await state.clear()
         return
 
-    result_file_id = message.document.file_id
-    set_result_file(order_id, result_file_id)
+    set_result_file(order_id, message.document.file_id)
 
-    # Buyurtmachiga o'quv rejani yuborish
     await bot.send_document(
         order["user_id"],
-        document=result_file_id,
+        document=message.document.file_id,
         caption=(
             f"🎉 <b>O'quv rejangiz tayyor!</b>\n\n"
             f"📌 Buyurtma: #<b>{order_id}</b>\n"
-            f"📄 Faylni yuklab oling.\n\n"
-            f"Xizmatimizdan foydalanganingiz uchun rahmat! 🙏"
+            f"📚 Yo'nalish: {order['kategoriya']}\n\n"
+            f"Faylni yuklab oling. Xizmatimizdan foydalanganingiz uchun rahmat! 🙏"
         ),
         parse_mode="HTML"
     )
 
     await message.answer(f"✅ O'quv reja #{order_id} buyurtmachiga yuborildi!")
     await state.clear()
-
-# ───── MAXSUS BUYURTMA CHAT ─────
-@router.callback_query(F.data.startswith("admin_chat_"))
-async def admin_chat(callback: CallbackQuery, bot: Bot):
-    order_id = callback.data.replace("admin_chat_", "")
-    order = get_order(order_id)
-
-    if order:
-        await bot.send_message(
-            ADMIN_ID,
-            f"💬 <b>Maxsus buyurtma #{order_id}</b>\n"
-            f"Foydalanuvchi: @{order['username']} (<code>{order['user_id']}</code>)\n"
-            f"Narx kelishish kerak!",
-            parse_mode="HTML"
-        )
-
-    await callback.answer("Admin bilan bog'lanildi! Tez orada javob beriladi.", show_alert=True)
