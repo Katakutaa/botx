@@ -5,7 +5,7 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from config import ADMIN_ID, KARTA_RAQAM, KARTA_EGASI, NARX, MUDDAT
+from config import ADMIN_ID, ADMIN_IDS, KARTA_RAQAM, KARTA_EGASI, NARX, MUDDAT
 from utils.pdf_utils import get_pdf_pages
 from utils.keyboards import main_menu, admin_menu, invoice_kb, admin_tasdiqlash_kb
 from utils.database import create_order, get_order, update_order_status, get_user_orders
@@ -24,7 +24,7 @@ class OrderState(StatesGroup):
 async def start(message: Message, state: FSMContext):
     await state.clear()
     # Admin bo'lsa — admin keyboard
-    if message.from_user.id == ADMIN_ID:
+    if message.from_user.id in ADMIN_IDS:
         await message.answer(
             f"👋 Salom, Admin! Boshqaruv paneli:",
             reply_markup=admin_menu()
