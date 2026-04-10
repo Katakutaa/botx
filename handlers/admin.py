@@ -20,18 +20,6 @@ class AdminState(StatesGroup):
     fayl_yuborish = State()
     order_id_kutish = State()  # /order uchun
 
-# ───── START — adminga o'z keyboard ─────
-@router.message(Command("start"))
-async def admin_start(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
-        return
-    await state.clear()
-    await message.answer(
-        f"👋 Salom, Admin!\n\n"
-        f"📊 Buyurtmalarni boshqarish paneli:",
-        reply_markup=admin_menu()
-    )
-
 # ───── ADMIN PANEL ─────
 @router.message(Command("admin"))
 async def admin_panel(message: Message, state: FSMContext):
