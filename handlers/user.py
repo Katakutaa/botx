@@ -1,4 +1,3 @@
-import os
 import logging
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery
@@ -10,14 +9,15 @@ from config import ADMIN_ID, KARTA_RAQAM, KARTA_EGASI, NARX, MUDDAT
 from utils.pdf_utils import get_pdf_pages
 from utils.keyboards import main_menu, invoice_kb, admin_tasdiqlash_kb
 from utils.database import create_order, get_order, update_order_status, get_user_orders
+from utils.kanal import kanal_yangi_buyurtma
 
 router = Router()
 logger = logging.getLogger(__name__)
 
 class OrderState(StatesGroup):
-    yunalish_kutish = State()   # 1. Yo'nalish nomi
-    fayl_kutish = State()       # 2. PDF fayl
-    chek_kutish = State()       # 3. To'lov cheki
+    yunalish_kutish = State()
+    fayl_kutish = State()
+    chek_kutish = State()
 
 # ───── START ─────
 @router.message(CommandStart())
@@ -47,7 +47,7 @@ async def malumot(message: Message):
         parse_mode="HTML"
     )
 
-# ───── BUYURTMA BERISH — 1-QADAM: YO'NALISH ─────
+# ───── 1-QADAM: YO'NALISH ─────
 @router.message(F.text == "📄 Buyurtma berish")
 async def buyurtma_boshlash(message: Message, state: FSMContext):
     await state.set_state(OrderState.yunalish_kutish)
@@ -58,17 +58,15 @@ async def buyurtma_boshlash(message: Message, state: FSMContext):
         parse_mode="HTML"
     )
 
-# ───── 2-QADAM: YO'NALISH QABUL → PDF SO'RASH ─────
+# ───── 2-QADAM: PDF ─────
 @router.message(OrderState.yunalish_kutish, F.text)
 async def yunalish_qabul(message: Message, state: FSMContext):
     yunalish = message.text.strip()
     if len(yunalish) < 3:
         await message.answer("❌ Yo'nalish nomini to'liq kiriting!")
         return
-
     await state.update_data(yunalish=yunalish)
     await state.set_state(OrderState.fayl_kutish)
-
     await message.answer(
         f"✅ Yo'nalish: <b>{yunalish}</b>\n\n"
         "📎 <b>2-qadam: Malaka talabi fayli</b>\n\n"
@@ -76,11 +74,10 @@ async def yunalish_qabul(message: Message, state: FSMContext):
         parse_mode="HTML"
     )
 
-# ───── 3-QADAM: PDF QABUL → INVOICE ─────
+# ───── 3-QADAM: INVOICE ─────
 @router.message(OrderState.fayl_kutish, F.document)
 async def fayl_qabul(message: Message, state: FSMContext, bot: Bot):
     doc = message.document
-
     if not doc.file_name.lower().endswith(".pdf"):
         await message.answer("❌ Faqat <b>PDF</b> fayl yuboring!", parse_mode="HTML")
         return
@@ -118,11 +115,10 @@ async def fayl_qabul(message: Message, state: FSMContext, bot: Bot):
         reply_markup=invoice_kb()
     )
 
-# ───── INVOICE TASDIQLASH → KARTA BERISH ─────
+# ───── INVOICE TASDIQLASH → KARTA ─────
 @router.callback_query(F.data == "invoice_tasdiqlash")
 async def invoice_tasdiqlash(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-
     order_id = create_order(
         user_id=callback.from_user.id,
         username=callback.from_user.username,
@@ -132,7 +128,6 @@ async def invoice_tasdiqlash(callback: CallbackQuery, state: FSMContext):
         narx=NARX,
         muddat=MUDDAT
     )
-
     await state.update_data(order_id=order_id)
     await state.set_state(OrderState.chek_kutish)
 
@@ -149,17 +144,16 @@ async def invoice_tasdiqlash(callback: CallbackQuery, state: FSMContext):
     )
     await callback.answer()
 
-# ───── INVOICE BEKOR QILISH ─────
+# ───── INVOICE BEKOR ─────
 @router.callback_query(F.data == "invoice_bekor")
 async def invoice_bekor(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.edit_text(
-        "❌ Buyurtma bekor qilindi.\n\n"
-        "Qayta buyurtma berish uchun menyudan foydalaning."
+        "❌ Buyurtma bekor qilindi.\n\nQayta buyurtma berish uchun menyudan foydalaning."
     )
     await callback.answer()
 
-# ───── CHEK QABUL QILISH ─────
+# ───── CHEK QABUL → ADMIN + KANAL ─────
 @router.message(OrderState.chek_kutish, F.photo)
 async def chek_qabul(message: Message, state: FSMContext, bot: Bot):
     data = await state.get_data()
@@ -171,9 +165,12 @@ async def chek_qabul(message: Message, state: FSMContext, bot: Bot):
         await state.clear()
         return
 
+    chek_photo_id = message.photo[-1].file_id
+
+    # Adminga chek + fayl
     await bot.send_photo(
         ADMIN_ID,
-        photo=message.photo[-1].file_id,
+        photo=chek_photo_id,
         caption=(
             f"🧾 <b>To'lov cheki — Buyurtma #{order_id}</b>\n\n"
             f"👤 @{order['username'] or 'Nomaʼlum'}\n"
@@ -185,12 +182,14 @@ async def chek_qabul(message: Message, state: FSMContext, bot: Bot):
         parse_mode="HTML",
         reply_markup=admin_tasdiqlash_kb(order_id)
     )
-
     await bot.send_document(
         ADMIN_ID,
         document=order["file_id"],
         caption=f"📎 Malaka talabi — #{order_id} | {order['kategoriya']}"
     )
+
+    # Kanalga arxivlash
+    await kanal_yangi_buyurtma(bot, order_id, order, chek_photo_id)
 
     update_order_status(order_id, "chek_yuborildi")
     await state.clear()
@@ -208,19 +207,14 @@ async def chek_qabul(message: Message, state: FSMContext, bot: Bot):
 @router.message(F.text == "📋 Mening buyurtmalarim")
 async def mening_buyurtmalar(message: Message):
     orders = get_user_orders(message.from_user.id)
-
     if not orders:
         await message.answer("📭 Sizda hali buyurtma yo'q.")
         return
 
     status_emoji = {
-        "kutilmoqda": "🟡",
-        "chek_yuborildi": "🔵",
-        "tasdiqlandi": "🟢",
-        "rad_etildi": "🔴",
-        "bajarildi": "✅"
+        "kutilmoqda": "🟡", "chek_yuborildi": "🔵",
+        "tasdiqlandi": "🟢", "rad_etildi": "🔴", "bajarildi": "✅"
     }
-
     text = "📋 <b>Sizning buyurtmalaringiz:</b>\n\n"
     for order_id, order in list(orders.items())[-5:]:
         emoji = status_emoji.get(order["status"], "⚪")
@@ -229,10 +223,9 @@ async def mening_buyurtmalar(message: Message):
             f"   💰 {NARX:,} so'm | 📅 {order['created_at']}\n"
             f"   Holat: {order['status']}\n\n"
         )
-
     await message.answer(text, parse_mode="HTML")
 
-# ───── NOTO'G'RI INPUTLAR ─────
+# ───── XATO INPUTLAR ─────
 @router.message(OrderState.yunalish_kutish)
 async def yunalish_xato(message: Message):
     await message.answer("✏️ Iltimos, yo'nalish nomini <b>matn</b> shaklida yuboring!", parse_mode="HTML")
