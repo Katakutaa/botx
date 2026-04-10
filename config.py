@@ -1,6 +1,6 @@
 import os
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8676257249:AAHxkDyOb9tAmQ6sOOeB3X07NjlVHOC74X8")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "0")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789,324561861"))  # Telegram ID'ingiz
 
 # Karta rekvizitlari
