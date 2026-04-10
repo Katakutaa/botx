@@ -71,7 +71,7 @@ async def one_order(message: Message):
     if not is_admin(message.from_user.id):
         return
 
-    parts = message.text.split()
+    parts = (message.text or "").split()
     if len(parts) < 2:
         await message.answer("Ishlatish: /order 0001")
         return
