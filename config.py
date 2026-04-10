@@ -11,4 +11,4 @@ KARTA_EGASI = os.getenv("KARTA_EGASI", "Ism Familiya")
 NARX = 900_000       # so'm
 MUDDAT = "24 soat"
 
-KANAL_ID = int(os.getenv("KANAL_ID", "-1001635418885"))
+KANAL_ID = int(os.getenv("KANAL_ID", "-1003905433017"))
