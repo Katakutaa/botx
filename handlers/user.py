@@ -43,7 +43,7 @@ async def malumot(message: Message):
         "📄 3 dona o'quv reja → <b>2 500 000 so'm</b> | 48 soat\n"
         "💳 To'lov: Karta orqali\n"
         "📁 Fayl turi: Faqat PDF\n\n"
-        "❓ Savol bo'lsa: @admin_username",
+        "❓ Savol bo'lsa: +998 97 222 92 49",
         parse_mode="HTML"
     )
 
