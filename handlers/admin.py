@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from config import ADMIN_ID, NARX, MUDDAT
+from config import ADMIN_ID, ADMIN_IDS, NARX, MUDDAT
 from utils.keyboards import admin_menu, admin_fayl_kb
 from utils.database import get_order, update_order_status, set_result_file, get_all_orders
 from utils.kanal import kanal_tasdiqlandi, kanal_rad_etildi, kanal_bajarildi
@@ -14,7 +14,7 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 def is_admin(user_id: int) -> bool:
-    return user_id == ADMIN_ID
+    return user_id in ADMIN_IDS
 
 class AdminState(StatesGroup):
     fayl_yuborish = State()
