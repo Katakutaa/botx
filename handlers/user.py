@@ -37,10 +37,9 @@ async def start(message: Message, state: FSMContext):
 async def malumot(message: Message):
     await message.answer(
         "📋 <b>Narx va Muddatlar:</b>\n\n"
-        "📄 1-5 bet → <b>25 000 so'm</b> | 12 soat\n"
-        "📄 6-15 bet → <b>40 000 so'm</b> | 24 soat\n"
-        "📄 16-30 bet → <b>60 000 so'm</b> | 48 soat\n"
-        "📄 30+ bet → <b>Kelishiladi</b>\n\n"
+        "📄 1 dona o'quv reja → <b>900 000 so'm</b> | 12 soat\n"
+        "📄 2 dona o'quv reja → <b>1 700 000 so'm</b> | 24 soat\n"
+        "📄 3 dona o'quv reja → <b>2 500 000 so'm</b> | 48 soat\n"
         "💳 To'lov: Karta orqali\n"
         "📁 Fayl turi: Faqat PDF\n\n"
         "❓ Savol bo'lsa: @admin_username",
