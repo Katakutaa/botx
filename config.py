@@ -10,3 +10,5 @@ KARTA_EGASI = os.getenv("KARTA_EGASI", "Ism Familiya")
 # Qat'iy narx va muddat
 NARX = 900_000       # so'm
 MUDDAT = "24 soat"
+
+KANAL_ID = int(os.getenv("KANAL_ID", "-1002518594489"))
